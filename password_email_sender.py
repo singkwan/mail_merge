@@ -9,20 +9,9 @@ from email.MIMEMultipart import MIMEMultipart
 from email.MIMEText import MIMEText
 from copy import deepcopy
 
-
-# Setup variables
-config_directory=os.path.expanduser('~')+'/.user_config/'
-email_subject='New password for bigpicture.lzd.co'
-
 # Load logging settings
 logging.config.dictConfig(yaml.load(open(os.path.join(config_directory,'pylogger.yaml'))))
 logger=logging.getLogger('info_main_handler')
-
-# Load central config file to get gmail username and API password
-config=yaml.load(open(os.path.join(config_directory,'master_config.yaml')))
-gmail_user=config['gmail']['username']
-gmail_pwd=config['gmail']['password']
-logger.info('Email credentials read')
 
 # Main class
 class info_emailer:
@@ -38,14 +27,15 @@ class info_emailer:
         self._gmail_pwd = gmail_pwd
 
     def read_placeholders(self, placeholder_fn, directory='./'):
-        '''Reads the placeholder and hence the receiver list'''
+        '''Reads the placeholder and hence the receiver list. There
+    should be a column named "email" that has the receiver emails separated by semicolon'''
 
         self.placeholder_fullpath = os.path.join(directory, placeholder_fn)
         self.df_placeholders = pd.read_csv(self.placeholder_fullpath)
         logger.info('Placeholder .csv read successfully')
 
     def generate_email(self, subject, sender, receivers, message_text):
-        '''Generate the email based on inputs'''
+        """Generate the email based on inputs. Output is a composed MIME message object"""
 
         msg =MIMEMultipart()
         msg['Subject'] = subject
@@ -57,15 +47,16 @@ class info_emailer:
         logger.info('Email generated')
         return msg
 
-    def send_email(self,sender,receivers,msg):
+    def send_email(self, sender, receivers, msg):
+        """Sends an email using google smtp.gmail.com with port 587. Uses the login credentials given
+        previously"""
+
         mailServer = smtplib.SMTP('smtp.gmail.com', 587)
-        #mailServer = smtplib.SMTP('localhost')
         mailServer.ehlo()
         mailServer.starttls()
         mailServer.ehlo()
         mailServer.login(self._gmail_user, self._gmail_pwd)
-        mailServer.sendmail(sender,receivers,msg.as_string())
-        #mailServer.sendmail()
+        mailServer.sendmail(sender, receivers, msg.as_string())
         mailServer.quit()
         logger.info('email_sent')
 
@@ -80,10 +71,9 @@ class info_emailer:
             self.message = deepcopy(self.message_original) # Do this so it doesn't read the file again
             self.temp_dict = series[~series.index.isin(['email'])] # Exclude column email and all rest are placeholders
 
-            # Go through each column (potential placeholders in the list)
             try:
                 self.message = self.message.format(**self.temp_dict)
-            except KeyError:
+            except KeyError: # If there are more or less columns than placeholders in the message body
                 logger.error('Columns mismatch between the csv file and the email body - there should only be 1 \
                              additional column called "email" in the csv that is the receivers list')
 
@@ -94,6 +84,19 @@ class info_emailer:
 
 if __name__ == '__main__':
 
+    # Setup variables
+    config_directory=os.path.expanduser('~')+'/.user_config/'
+
+    # Load central config file to get gmail username and API password
+    config=yaml.load(open(os.path.join(config_directory,'master_config.yaml')))
+    gmail_user=config['gmail']['username']
+    gmail_pwd=config['gmail']['password']
+    logger.info('Email credentials read')
+
+    # Email subject put here
+    email_subject='New password for bigpicture.lzd.co'
+
+    # Run main functions
     sender = info_emailer(gmail_user,gmail_pwd)
     sender.read_placeholders('bpr_email_list_adhoc.csv')
     sender.mail_merge(email_subject,'message_body.txt')
