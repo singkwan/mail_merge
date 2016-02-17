@@ -1,0 +1,11 @@
+Hi,
+
+The password for your access to bigpicture.lzd.co. The details are as below:
+
+Username: {username}
+Password: {password}
+
+You have been given access to country {countries_accessible}. Your password will be automatically reset frequently and you will be emailed a new password. This is a temporary security measure until we migrate out of google OAuth2.0.
+
+Thank you
+Marketing Technology & Intelligence
