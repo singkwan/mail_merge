@@ -9,6 +9,9 @@ from email.MIMEMultipart import MIMEMultipart
 from email.MIMEText import MIMEText
 from copy import deepcopy
 
+# Setup variables
+config_directory=os.path.expanduser('~')+'/.user_config/'
+
 # Load logging settings
 logging.config.dictConfig(yaml.load(open(os.path.join(config_directory,'pylogger.yaml'))))
 logger=logging.getLogger('info_main_handler')
@@ -83,9 +86,6 @@ class info_emailer:
 
 
 if __name__ == '__main__':
-
-    # Setup variables
-    config_directory=os.path.expanduser('~')+'/.user_config/'
 
     # Load central config file to get gmail username and API password
     config=yaml.load(open(os.path.join(config_directory,'master_config.yaml')))
